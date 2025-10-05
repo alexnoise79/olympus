@@ -378,9 +378,7 @@ const fields = parseFields(fieldsString);
 const targetPath = path.join('apps', 'zeus', 'src', 'app', entityName);
 const migrationPath = path.join('apps', 'zeus', 'src', 'migrations');
 const interfacePath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models');
-const modelsIndexPath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models', 'index.ts');
 const servicePath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'services');
-const servicesIndexPath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'services', 'index.ts');
 
 // Create directories
 if (!fs.existsSync(targetPath)) {
@@ -423,44 +421,8 @@ fs.writeFileSync(path.join(interfacePath, `${entityName}.ts`), interfaceContent)
 const angularServiceContent = generateAngularService(entityName, fields);
 fs.writeFileSync(path.join(servicePath, `${entityName}.service.ts`), angularServiceContent);
 
-// Update models index file
-let modelsIndexContent = '';
-if (fs.existsSync(modelsIndexPath)) {
-  modelsIndexContent = fs.readFileSync(modelsIndexPath, 'utf8');
-}
-
-// Check if export already exists
-const exportLine = `export * from './${entityName}';`;
-if (!modelsIndexContent.includes(exportLine)) {
-  if (modelsIndexContent.trim() === '' || modelsIndexContent.trim() === '// Export all model interfaces here') {
-    modelsIndexContent = exportLine + '\n';
-  } else {
-    modelsIndexContent += exportLine + '\n';
-  }
-  fs.writeFileSync(modelsIndexPath, modelsIndexContent);
-}
-
-// Update services index file
-let servicesIndexContent = '';
-if (fs.existsSync(servicesIndexPath)) {
-  servicesIndexContent = fs.readFileSync(servicesIndexPath, 'utf8');
-}
-
-// Check if service export already exists
-const serviceExportLine = `export * from './${entityName}.service';`;
-if (!servicesIndexContent.includes(serviceExportLine)) {
-  if (servicesIndexContent.trim() === '' || servicesIndexContent.trim() === '// Export all services here') {
-    servicesIndexContent = serviceExportLine + '\n';
-  } else {
-    servicesIndexContent += serviceExportLine + '\n';
-  }
-  fs.writeFileSync(servicesIndexPath, servicesIndexContent);
-}
-
 console.log(`✅ CRUD resource '${entityName}' generated successfully!`);
 console.log(`📁 Files created in: ${targetPath}`);
 console.log(`🗃️ Migration created in: ${migrationPath}`);
 console.log(`🔗 Interface created in: ${interfacePath}`);
 console.log(`⚡ Angular service created in: ${servicePath}`);
-console.log(`📝 Models index updated`);
-console.log(`📝 Services index updated`);
