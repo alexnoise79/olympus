@@ -47,6 +47,8 @@ function parseFields(fieldsString) {
     
     if (isOptional) {
       decorators[0] = decorators[0].replace(')', ', { nullable: true })');
+      // Fix the case where there's no initial options
+      decorators[0] = decorators[0].replace('@Column(,', '@Column(');
     }
     
     return {
@@ -261,6 +263,24 @@ import { Create${pascalCase}Dto } from './create-${entityName}.dto';
 export class Update${pascalCase}Dto extends PartialType(Create${pascalCase}Dto) {}`;
 }
 
+// Generate interface file
+function generateInterface(entityName, fields) {
+  const pascalCase = toPascalCase(entityName);
+  
+  let interfaceContent = `export interface I${pascalCase} {
+  id: number;
+
+`;
+  
+  fields.forEach(field => {
+    interfaceContent += `  ${field.name}: ${field.type}${field.isOptional ? ' | null' : ''};\n`;
+  });
+  
+  interfaceContent += '}';
+  
+  return interfaceContent;
+}
+
 // Generate migration file
 function generateMigration(entityName, fields) {
   const pascalCase = toPascalCase(entityName);
@@ -318,6 +338,8 @@ export class Create${pascalCase}Table${timestamp} implements MigrationInterface 
 const fields = parseFields(fieldsString);
 const targetPath = path.join('apps', 'zeus', 'src', 'app', entityName);
 const migrationPath = path.join('apps', 'zeus', 'src', 'migrations');
+const interfacePath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models');
+const modelsIndexPath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models', 'index.ts');
 
 // Create directories
 if (!fs.existsSync(targetPath)) {
@@ -332,6 +354,10 @@ if (!fs.existsSync(migrationPath)) {
   fs.mkdirSync(migrationPath, { recursive: true });
 }
 
+if (!fs.existsSync(interfacePath)) {
+  fs.mkdirSync(interfacePath, { recursive: true });
+}
+
 // Generate files
 fs.writeFileSync(path.join(targetPath, `${entityName}.entity.ts`), generateEntity(entityName, fields));
 fs.writeFileSync(path.join(targetPath, `${entityName}.module.ts`), generateModule(entityName));
@@ -343,6 +369,30 @@ fs.writeFileSync(path.join(targetPath, 'dto', `update-${entityName}.dto.ts`), ge
 const migration = generateMigration(entityName, fields);
 fs.writeFileSync(path.join(migrationPath, `${migration.timestamp}_create_${toSnakeCase(toPascalCase(entityName))}_table.ts`), migration.content);
 
+// Generate interface
+const pascalCase = toPascalCase(entityName);
+const interfaceContent = generateInterface(entityName, fields);
+fs.writeFileSync(path.join(interfacePath, `${entityName}.ts`), interfaceContent);
+
+// Update models index file
+let modelsIndexContent = '';
+if (fs.existsSync(modelsIndexPath)) {
+  modelsIndexContent = fs.readFileSync(modelsIndexPath, 'utf8');
+}
+
+// Check if export already exists
+const exportLine = `export * from './${entityName}';`;
+if (!modelsIndexContent.includes(exportLine)) {
+  if (modelsIndexContent.trim() === '' || modelsIndexContent.trim() === '// Export all model interfaces here') {
+    modelsIndexContent = exportLine + '\n';
+  } else {
+    modelsIndexContent += exportLine + '\n';
+  }
+  fs.writeFileSync(modelsIndexPath, modelsIndexContent);
+}
+
 console.log(`✅ CRUD resource '${entityName}' generated successfully!`);
 console.log(`📁 Files created in: ${targetPath}`);
 console.log(`🗃️ Migration created in: ${migrationPath}`);
+console.log(`🔗 Interface created in: ${interfacePath}`);
+console.log(`📝 Models index updated`);
