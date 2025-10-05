@@ -263,6 +263,45 @@ import { Create${pascalCase}Dto } from './create-${entityName}.dto';
 export class Update${pascalCase}Dto extends PartialType(Create${pascalCase}Dto) {}`;
 }
 
+// Generate Angular service file
+function generateAngularService(entityName, fields) {
+  const pascalCase = toPascalCase(entityName);
+  const camelCase = toCamelCase(entityName);
+  
+  return `import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { I${pascalCase} } from '../models/${entityName}';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class ${pascalCase}Service {
+  private apiUrl = '/api/${camelCase}';
+  private http = inject(HttpClient);
+
+  getAll(): Observable<I${pascalCase}[]> {
+    return this.http.get<I${pascalCase}[]>(this.apiUrl);
+  }
+
+  getById(id: number): Observable<I${pascalCase}> {
+    return this.http.get<I${pascalCase}>(\`\${this.apiUrl}/\${id}\`);
+  }
+
+  create(${camelCase}: Omit<I${pascalCase}, 'id'>): Observable<I${pascalCase}> {
+    return this.http.post<I${pascalCase}>(this.apiUrl, ${camelCase});
+  }
+
+  update(id: number, ${camelCase}: Partial<I${pascalCase}>): Observable<I${pascalCase}> {
+    return this.http.patch<I${pascalCase}>(\`\${this.apiUrl}/\${id}\`, ${camelCase});
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(\`\${this.apiUrl}/\${id}\`);
+  }
+}`;
+}
+
 // Generate interface file
 function generateInterface(entityName, fields) {
   const pascalCase = toPascalCase(entityName);
@@ -340,6 +379,8 @@ const targetPath = path.join('apps', 'zeus', 'src', 'app', entityName);
 const migrationPath = path.join('apps', 'zeus', 'src', 'migrations');
 const interfacePath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models');
 const modelsIndexPath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'models', 'index.ts');
+const servicePath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'services');
+const servicesIndexPath = path.join('libs', 'olympus', 'core', 'src', 'lib', 'services', 'index.ts');
 
 // Create directories
 if (!fs.existsSync(targetPath)) {
@@ -358,6 +399,10 @@ if (!fs.existsSync(interfacePath)) {
   fs.mkdirSync(interfacePath, { recursive: true });
 }
 
+if (!fs.existsSync(servicePath)) {
+  fs.mkdirSync(servicePath, { recursive: true });
+}
+
 // Generate files
 fs.writeFileSync(path.join(targetPath, `${entityName}.entity.ts`), generateEntity(entityName, fields));
 fs.writeFileSync(path.join(targetPath, `${entityName}.module.ts`), generateModule(entityName));
@@ -373,6 +418,10 @@ fs.writeFileSync(path.join(migrationPath, `${migration.timestamp}_create_${toSna
 const pascalCase = toPascalCase(entityName);
 const interfaceContent = generateInterface(entityName, fields);
 fs.writeFileSync(path.join(interfacePath, `${entityName}.ts`), interfaceContent);
+
+// Generate Angular service
+const angularServiceContent = generateAngularService(entityName, fields);
+fs.writeFileSync(path.join(servicePath, `${entityName}.service.ts`), angularServiceContent);
 
 // Update models index file
 let modelsIndexContent = '';
@@ -391,8 +440,27 @@ if (!modelsIndexContent.includes(exportLine)) {
   fs.writeFileSync(modelsIndexPath, modelsIndexContent);
 }
 
+// Update services index file
+let servicesIndexContent = '';
+if (fs.existsSync(servicesIndexPath)) {
+  servicesIndexContent = fs.readFileSync(servicesIndexPath, 'utf8');
+}
+
+// Check if service export already exists
+const serviceExportLine = `export * from './${entityName}.service';`;
+if (!servicesIndexContent.includes(serviceExportLine)) {
+  if (servicesIndexContent.trim() === '' || servicesIndexContent.trim() === '// Export all services here') {
+    servicesIndexContent = serviceExportLine + '\n';
+  } else {
+    servicesIndexContent += serviceExportLine + '\n';
+  }
+  fs.writeFileSync(servicesIndexPath, servicesIndexContent);
+}
+
 console.log(`✅ CRUD resource '${entityName}' generated successfully!`);
 console.log(`📁 Files created in: ${targetPath}`);
 console.log(`🗃️ Migration created in: ${migrationPath}`);
 console.log(`🔗 Interface created in: ${interfacePath}`);
+console.log(`⚡ Angular service created in: ${servicePath}`);
 console.log(`📝 Models index updated`);
+console.log(`📝 Services index updated`);
