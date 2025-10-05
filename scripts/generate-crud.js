@@ -142,7 +142,7 @@ export class ${pascalCase}Service {
     return this.${camelCase}Repository.save(${camelCase});
   }
 
-  async findAll(): Promise<${pascalCase}[]> {
+  async findAll(): Promise<Array<${pascalCase}>> {
     return this.${camelCase}Repository.find();
   }
 
@@ -280,8 +280,8 @@ export class ${pascalCase}Service {
   private apiUrl = '/api/${camelCase}';
   private http = inject(HttpClient);
 
-  getAll(): Observable<I${pascalCase}[]> {
-    return this.http.get<I${pascalCase}[]>(this.apiUrl);
+  getAll(): Observable<Array<I${pascalCase}>> {
+    return this.http.get<Array<I${pascalCase}>>(this.apiUrl);
   }
 
   getById(id: number): Observable<I${pascalCase}> {
