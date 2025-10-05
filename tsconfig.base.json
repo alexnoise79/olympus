@@ -15,8 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@olympus/core": ["libs/olympus/core/src/index.ts"],
-      "@olympus/tools": ["tools/src/index.ts"]
+      "@olympus/core": ["libs/olympus/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

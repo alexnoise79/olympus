@@ -2,9 +2,7 @@
   "name": "@olympus/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {
-    "generate:crud": "node scripts/generate-crud.js"
-  },
+  "scripts": {},
   "private": true,
   "dependencies": {
     "@angular-devkit/build-angular": "~20.3.0",
