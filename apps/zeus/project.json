@@ -60,6 +60,13 @@
           "buildTarget": "zeus:build:production"
         }
       }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node scripts/generate-crud.js",
+        "cwd": "."
+      }
     }
   }
 }
