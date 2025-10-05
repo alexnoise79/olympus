@@ -84,7 +84,7 @@ if (!fs.existsSync(path.join(directory, 'migrations'))) {
 }
 
 // Generate interface
-const interfaceContent = `export interface ${entityPascal} {
+const interfaceContent = `export interface I${entityPascal} {
   id: string;
 ${fields.map(field => 
   `  ${field.name}${field.isOptional ? '?' : ''}: ${getTypeScriptType(field.type)};`
@@ -110,7 +110,8 @@ ${fields.map(field =>
 const serviceContent = `import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ${entityPascal}, Create${entityPascal}Dto, Update${entityPascal}Dto } from './${entityName}.interface';
+import { ${entityPascal} } from './${entityName}.entity';
+import { I${entityPascal}, Create${entityPascal}Dto, Update${entityPascal}Dto } from './${entityName}.interface';
 
 @Injectable()
 export class ${entityPascal}Service {
@@ -119,20 +120,20 @@ export class ${entityPascal}Service {
     private readonly ${entityCamel}Repository: Repository<${entityPascal}>,
   ) {}
 
-  async create(createDto: Create${entityPascal}Dto): Promise<${entityPascal}> {
+  async create(createDto: Create${entityPascal}Dto): Promise<I${entityPascal}> {
     const ${entityCamel} = this.${entityCamel}Repository.create(createDto);
     return await this.${entityCamel}Repository.save(${entityCamel});
   }
 
-  async findAll(): Promise<${entityPascal}[]> {
+  async findAll(): Promise<I${entityPascal}[]> {
     return await this.${entityCamel}Repository.find();
   }
 
-  async findOne(id: string): Promise<${entityPascal} | null> {
+  async findOne(id: string): Promise<I${entityPascal} | null> {
     return await this.${entityCamel}Repository.findOne({ where: { id } });
   }
 
-  async update(id: string, updateDto: Update${entityPascal}Dto): Promise<${entityPascal} | null> {
+  async update(id: string, updateDto: Update${entityPascal}Dto): Promise<I${entityPascal} | null> {
     await this.${entityCamel}Repository.update(id, updateDto);
     return await this.findOne(id);
   }

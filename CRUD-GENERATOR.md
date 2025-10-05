@@ -48,9 +48,9 @@ npm run generate:crud category "name:string,description?:string,parentId?:string
 For each entity, the generator creates:
 
 1. **Interface File** (`<entity>.interface.ts`)
-   - Main entity interface
-   - CreateDto interface
-   - UpdateDto interface
+   - Main entity interface (`I<Entity>`)
+   - CreateDto interface (`Create<Entity>Dto`)
+   - UpdateDto interface (`Update<Entity>Dto`)
 
 2. **Service File** (`<entity>.service.ts`)
    - Complete CRUD service with methods:
@@ -94,7 +94,7 @@ After generating the CRUD scaffolding:
 
 1. **Import the generated files** in your Zeus app module:
    ```typescript
-   import { User, UserService, UserController } from '@olympus/core';
+   import { User, UserService, UserController, IUser } from '@olympus/core';
    
    @Module({
      imports: [
@@ -125,3 +125,4 @@ After generating the CRUD scaffolding:
 - The generator uses UUID for primary keys
 - Generated services include proper TypeORM repository injection
 - All interfaces are properly typed with TypeScript
+- **Interface naming**: Main interfaces are prefixed with `I` (e.g., `IUser`) to avoid naming conflicts with entity classes
